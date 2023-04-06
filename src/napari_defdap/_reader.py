@@ -96,12 +96,21 @@ def read_defdap(path):
     dicmap.linkEbsdMap(ebsdmap, transformType=ebsd_params['transform_type'])
     dicmap.findGrains(algorithm=ebsd_params['find_grains_algorithm'])
 
+    image_data = dicmap.crop(dicmap.data.max_shear)
+    clim = np.quantile(image_data, [0.01, 0.99])
     # optional kwargs for the corresponding viewer.add_* method
-    add_kwargs = {
+    joint_kwargs = {
             'scale': [scale, scale],
             'metadata': {'dicmap': dicmap, 'ebsdmap': ebsdmap},
             }
-    image_data = dicmap.crop(dicmap.data.max_shear)
+    image_kwargs = {
+            **joint_kwargs,
+            'contrast_limits': clim,
+            'colormap': 'viridis',
+            'name': 'max_shear'
+            }
+    label_kwargs = {**joint_kwargs, 'name': 'grains'}
     grains = dicmap.grains
 
-    return [(image_data, add_kwargs, 'image'), (grains, add_kwargs, 'labels')]
+    return [(image_data, image_kwargs, 'image'),
+            (grains, label_kwargs, 'labels')]
