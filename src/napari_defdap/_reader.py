@@ -7,6 +7,7 @@ https://napari.org/stable/plugins/guides.html?#readers
 """
 import os
 import numpy as np
+import yaml
 from defdap import hrdic, ebsd
 
 
@@ -36,11 +37,11 @@ def napari_get_reader(path):
         If the path is a recognized format, return a function that accepts the
         same path or list of paths, and returns a list of layer data tuples.
     """
-    ALLOWED_EXTENSIONS = 'txt', 'cpr', 'crc'
+    ALLOWED_EXTENSIONS = '.defdap.yml'
     if isinstance(path, list):
-        if not all(_ends_with_any(p, ALLOWED_EXTENSIONS) for p in path):
+        if not all(p.endswith(ALLOWED_EXTENSIONS) for p in path):
             return None
-    elif not _ends_with_any(path, ALLOWED_EXTENSIONS):
+    elif not path.endswith(ALLOWED_EXTENSIONS):
         return None
 
     # otherwise we return the *function* that can read ``path``.
@@ -71,33 +72,29 @@ def read_defdap(path):
     """
     # handle both a string and a list of strings
     path = path[0] if type(path) is list else path
-    # load all files into array
-    scale = 25/2048  # µm
-    dicmap = None
-    if path.endswith('txt'):
-        dicmap = hrdic.Map(*os.path.split(path))
-        dicmap.setCrop(xMin=30, xMax=90, yMin=10, yMax=10)
-        dicmap.setScale(micrometrePerPixel=scale)
-    ebsd_fn = _look_for_ebsd(path)
+    directory = os.path.split(path)[0]
+    with open(path, mode='r') as fin:
+        data = yaml.safe_load(fin)
+    dic_params = data['dic']
+    ebsd_params = data['ebsd']
+    scale = dic_params['scale']
+    dicmap = hrdic.Map(directory, dic_params['file'])
+    xcrop, ycrop = (crop := dic_params['crop'])['x'], crop['y']
+    dicmap.setCrop(xMin=xcrop[0], xMax=xcrop[1], yMin=ycrop[0], yMax=ycrop[1])
+    dicmap.setScale(micrometrePerPixel=scale)
+
+    ebsd_fn = os.path.join(directory, ebsd_params['file'])
     ebsdmap = ebsd.Map(ebsd_fn)
     ebsdmap.buildQuatArray()
     ebsdmap.findBoundaries()
-    ebsdmap.findGrains(minGrainSize=10)
+    ebsdmap.findGrains(minGrainSize=ebsd_params['min_grain_size'])
     ebsdmap.calcGrainMisOri(calcAxis=False)
     ebsdmap.calcAverageGrainSchmidFactors(
-            loadVector=np.array([1, 0, 0]))
-    if dicmap is not None and ebsdmap is not None:
-        print('we be alignin')
-        dicmap.homogPoints = np.array((
-                [(343, 627), (1908, 1820), (176, 1919),
-                 (1320, 409), (1560, 1068), (548, 52)]
-                ))
-        ebsdmap.homogPoints = np.array((
-                [(323, 569), (1432, 1398), (190, 1469),
-                 (999, 414), (1160, 828), (459, 175)]
-                ))
-        dicmap.linkEbsdMap(ebsdmap, transformType='affine')
-        dicmap.findGrains(algorithm='warp')
+            loadVector=np.array(ebsd_params['load_vector']))
+    dicmap.homogPoints = np.array(dic_params['homolog_points'])
+    ebsdmap.homogPoints = np.array(ebsd_params['homolog_points'])
+    dicmap.linkEbsdMap(ebsdmap, transformType=ebsd_params['transform_type'])
+    dicmap.findGrains(algorithm=ebsd_params['find_grains_algorithm'])
 
     # optional kwargs for the corresponding viewer.add_* method
     add_kwargs = {

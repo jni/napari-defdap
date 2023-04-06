@@ -20,7 +20,7 @@ contributions:
   readers:
     - command: napari-defdap.get_reader
       accepts_directories: false
-      filename_patterns: ['*.txt', '*.cpr', '*.crc']
+      filename_patterns: ['*.defdap.yml']
   sample_data:
     - command: napari-defdap.make_sample_data
       display_name: DefDAP napari plugin
