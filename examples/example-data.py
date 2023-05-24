@@ -8,5 +8,6 @@ shear_layer, grains_layer = viewer.open(
 dock_widget, widget = viewer.window.add_plugin_dock_widget('napari-defdap')
 
 grains_layer.selected_label = 64
+grains_layer.mode = 'pick'
 
 napari.run()
