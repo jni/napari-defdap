@@ -17,3 +17,11 @@ def plot_slip_detection_plot(dicmap, grain_id, max_shear_along_angles, *, ax):
                 )
     ax.set_title('Band angle distribution')
     ax.set_xlabel('Angle in degrees')
+
+
+def plot_shear(prop, *, ax):
+    minr, minc, maxr, maxc = prop.bbox
+    ax.imshow(prop.intensity_image,
+              aspect='equal',
+              extent=[minr - 0.5, maxr + 0.5, maxc + 0.5, minc - 0.5])
+    ax.set_aspect('equal')
