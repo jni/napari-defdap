@@ -1,46 +1,52 @@
 """
-This module is an example of a barebones QWidget plugin for napari
-
-It implements the Widget specification.
 see: https://napari.org/stable/plugins/guides.html?#widgets
-
-Replace code below according to your needs.
 """
 from typing import TYPE_CHECKING
 
-from magicgui import magic_factory
-from qtpy.QtWidgets import QHBoxLayout, QPushButton, QWidget
+import numpy as np
+import matplotlib.pyplot as plt
+from skimage import measure
+from napari_matplotlib.base import NapariMPLWidget
+from qtpy.QtWidgets import QHBoxLayout, QWidget
+
+from ._plot_functions import plot_slip_detection_plot
+from ._slips import compute_radon
 
 if TYPE_CHECKING:
     import napari
 
 
-class ExampleQWidget(QWidget):
-    # your QWidget.__init__ can optionally request the napari viewer instance
-    # in one of two ways:
-    # 1. use a parameter called `napari_viewer`, as done here
-    # 2. use a type annotation of 'napari.viewer.Viewer' for any parameter
-    def __init__(self, napari_viewer):
-        super().__init__()
+class GrainPlots(QWidget):
+    def __init__(self, napari_viewer: 'napari.viewer.Viewer', parent=None):
+        super().__init__(parent=parent)
         self.viewer = napari_viewer
-
-        btn = QPushButton("Click me!")
-        btn.clicked.connect(self._on_click)
-
+        with plt.style.context('dark_background'):
+            self.mpl = NapariMPLWidget(napari_viewer, parent=self)
         self.setLayout(QHBoxLayout())
-        self.layout().addWidget(btn)
+        self.layout().addWidget(self.mpl)
+        with plt.style.context('dark_background'):
+            self.ax = self.mpl.figure.add_subplot(projection='polar')
+            self.ax.set_theta_zero_location('S')
+        self.grains_layer = next(layer for layer in napari_viewer.layers if
+                                 type(layer).__name__ == 'Labels')
+        self.intensity_layer = next(layer for layer in napari_viewer.layers
+                                    if type(layer).__name__ == 'Image')
+        self.props = measure.regionprops(
+                np.clip(self.grains_layer.data, 0, None),
+                intensity_image=self.intensity_layer.data,
+                )
+        self.dic = self.grains_layer.metadata['dicmap']
+        self.ebsd = self.grains_layer.metadata['ebsdmap']
+        self.callback = self.grains_layer.events.selected_label.connect(
+                self._update_plots
+                )
 
-    def _on_click(self):
-        print("napari has", len(self.viewer.layers), "layers")
-
-
-@magic_factory
-def example_magic_widget(img_layer: "napari.layers.Image"):
-    print(f"you have selected {img_layer}")
-
-
-# Uses the `autogenerate: true` flag in the plugin manifest
-# to indicate it should be wrapped as a magicgui to autogenerate
-# a widget.
-def example_function_widget(img_layer: "napari.layers.Image"):
-    print(f"you have selected {img_layer}")
+    def _update_plots(self, event):
+        with plt.style.context('dark_background'):
+            self.ax.clear()
+            self.ax.set_theta_zero_location('S')
+        k = self.grains_layer.selected_label - 1
+        radon_values = compute_radon(self.dic, k, self.props[k])
+        with plt.style.context('dark_background'):
+            plot_slip_detection_plot(self.dic, k, radon_values, ax=self.ax)
+            self.ax.figure.canvas.draw_idle()
