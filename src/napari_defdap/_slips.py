@@ -48,7 +48,7 @@ def sb_angle(shear_map, threshold=None, median_filter=None):
 def compute_radon(dicmap, grain_id, regionprop,
                   threshold_func=filters.threshold_mean,
                   threshold_multiplier=1.6, minimum_threshold=0.013):
-    values = np.asarray(dicmap[grain_id].maxShearList)
+    values = np.asarray(dicmap[grain_id].data.max_shear)
     threshold_value = max(threshold_multiplier * threshold_func(values),
                           minimum_threshold)
     grain_map = regionprop.intensity_image
@@ -75,14 +75,14 @@ def get_slipsystem_info2(grainID, DicMap):
     """
 
     #Load the slip systems for the current phase
-    ssGroup = DicMap[grainID].ebsdGrain.phase.slipSystems
+    ssGroup = DicMap[grainID].ebsd_grain.phase.slipSystems
 
     #Calculate the schmid factor of each slip system
-    schmidFactor = DicMap[grainID].ebsdGrain.averageSchmidFactors
+    schmidFactor = DicMap[grainID].ebsd_grain.averageSchmidFactors
 
     #Calculate the slip trace angles
-    DicMap[grainID].ebsdGrain.calcSlipTraces()
-    ST_Angle = np.rad2deg(DicMap[grainID].ebsdGrain.slipTraceAngles) % 360
+    DicMap[grainID].ebsd_grain.calcSlipTraces()
+    ST_Angle = np.rad2deg(DicMap[grainID].ebsd_grain.slipTraceAngles) % 360
 
     ids = np.arange(1, 5)
     labels = [ssGroup[i][0].slipPlaneLabel for i in range(4)]

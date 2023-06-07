@@ -36,6 +36,7 @@ class GrainPlots(QWidget):
                 np.clip(self.grains_layer.data, 0, None),
                 intensity_image=self.intensity_layer.data,
                 )
+        self.props_dict = {prop.label: prop for prop in self.props}
         self.dic = self.grains_layer.metadata['dicmap']
         self.ebsd = self.grains_layer.metadata['ebsdmap']
         self.callback = self.grains_layer.events.selected_label.connect(
@@ -48,9 +49,11 @@ class GrainPlots(QWidget):
             self.ax0.clear()
             self.ax1.clear()
             self.ax1.set_theta_zero_location('S')
-        k = self.grains_layer.selected_label - 1
-        radon_values = compute_radon(self.dic, k, self.props[k])
+        lab = self.grains_layer.selected_label
+        k = lab - 1
+        prop = self.props_dict[lab]
+        radon_values = compute_radon(self.dic, k, prop)
         with plt.style.context('dark_background'):
-            plot_shear(self.props[k], ax=self.ax0)
+            plot_shear(prop, ax=self.ax0)
             plot_slip_detection_plot(self.dic, k, radon_values, ax=self.ax1)
             self.ax1.figure.canvas.draw_idle()
