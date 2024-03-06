@@ -86,7 +86,9 @@ def read_defdap(path):
 
     ebsd_fn = os.path.join(directory, ebsd_params['file'])
     ebsdmap = ebsd.Map(ebsd_fn)
-    #ebsdmap.find_boundaries()
+    ebsdmap.find_boundaries(
+            misori_tol=ebsd_params.get('misorientation_tolerance', 10)
+            )
     ebsdmap.find_grains(min_grain_size=ebsd_params['min_grain_size'])
     #ebsdmap.calcGrainMisOri(calcAxis=False)
     ebsdmap.calc_average_grain_schmid_factors(
