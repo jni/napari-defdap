@@ -74,17 +74,17 @@ def get_slipsystem_info2(grainID, DicMap):
     """
 
     #Load the slip systems for the current phase
-    ssGroup = DicMap[grainID].ebsd_grain.phase.slipSystems
+    ssGroup = DicMap[grainID].ebsd_grain.phase.slip_systems
 
     #Calculate the schmid factor of each slip system
-    schmidFactor = DicMap[grainID].ebsd_grain.averageSchmidFactors
+    schmidFactor = DicMap[grainID].ebsd_grain.average_schmid_factors
 
     #Calculate the slip trace angles
-    DicMap[grainID].ebsd_grain.calcSlipTraces()
-    ST_Angle = np.rad2deg(DicMap[grainID].ebsd_grain.slipTraceAngles) % 360
+    DicMap[grainID].ebsd_grain.calc_slip_traces()
+    ST_Angle = np.rad2deg(DicMap[grainID].ebsd_grain.slip_trace_angles) % 360
 
     ids = np.arange(1, 5)
-    labels = [ssGroup[i][0].slipPlaneLabel for i in range(4)]
+    labels = [ssGroup[i][0].slip_plane_label for i in range(4)]
     sfs = [max(schmidFactor[i]) for i in range(4)]
     angles = [ST_Angle[i] for i in range(4)]
     frame = pd.DataFrame({
