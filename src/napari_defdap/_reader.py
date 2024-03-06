@@ -98,7 +98,7 @@ def read_defdap(path):
             algorithm=ebsd_params['find_grains_algorithm']
             )
     #dicmap.data.grains = grains_raw
-    image_data = dicmap.crop(dicmap.data.max_shear)
+    image_data = np.nan_to_num(dicmap.crop(dicmap.data.max_shear))
     grains = dicmap.crop(grains_raw)
     clim = np.quantile(image_data, [0.01, 0.99])
     # optional kwargs for the corresponding viewer.add_* method
