@@ -23,5 +23,5 @@ def plot_shear(prop, *, ax):
     minr, minc, maxr, maxc = prop.bbox
     ax.imshow(prop.intensity_image,
               aspect='equal',
-              extent=[minr - 0.5, maxr + 0.5, maxc + 0.5, minc - 0.5])
+              extent=[minc - 0.5, maxc + 0.5, maxr + 0.5, minr - 0.5])
     ax.set_aspect('equal')

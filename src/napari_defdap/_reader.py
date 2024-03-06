@@ -86,18 +86,20 @@ def read_defdap(path):
 
     ebsd_fn = os.path.join(directory, ebsd_params['file'])
     ebsdmap = ebsd.Map(ebsd_fn)
-    ebsdmap.find_boundaries()
+    #ebsdmap.find_boundaries()
     ebsdmap.find_grains(min_grain_size=ebsd_params['min_grain_size'])
-    ebsdmap.calcGrainMisOri(calcAxis=False)
-    ebsdmap.calcAverageGrainSchmidFactors(
-            loadVector=np.array(ebsd_params['load_vector']))
+    #ebsdmap.calcGrainMisOri(calcAxis=False)
+    ebsdmap.calc_average_grain_schmid_factors(
+            load_vector=np.array(ebsd_params['load_vector']))
     dicmap.frame.homog_points = np.array(dic_params['homolog_points'])
     ebsdmap.frame.homog_points = np.array(ebsd_params['homolog_points'])
     dicmap.link_ebsd_map(ebsdmap, transform_type=ebsd_params['transform_type'])
-    dicmap.find_grains(algorithm=ebsd_params['find_grains_algorithm'])
-
+    grains_raw = dicmap.find_grains(
+            algorithm=ebsd_params['find_grains_algorithm']
+            )
+    #dicmap.data.grains = grains_raw
     image_data = dicmap.crop(dicmap.data.max_shear)
-    grains = dicmap.crop(dicmap.data.grains)
+    grains = dicmap.crop(grains_raw)
     clim = np.quantile(image_data, [0.01, 0.99])
     # optional kwargs for the corresponding viewer.add_* method
     joint_kwargs = {
