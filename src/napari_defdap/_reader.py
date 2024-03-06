@@ -78,7 +78,7 @@ def read_defdap(path):
     dic_params = data['dic']
     ebsd_params = data['ebsd']
     scale = dic_params['scale']
-    dicmap = hrdic.Map(directory, dic_params['file'])
+    dicmap = hrdic.Map(os.path.join(directory, dic_params['file']))
     xcrop, ycrop = (crop := dic_params['crop'])['x'], crop['y']
     dicmap.set_crop(left=xcrop[0], right=xcrop[1],
                     top=ycrop[0], bottom=ycrop[1])
