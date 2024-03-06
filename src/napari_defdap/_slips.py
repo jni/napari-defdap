@@ -39,20 +39,19 @@ def sb_angle(shear_map, threshold=None, median_filter=None):
         shear_map_filt = ndimage.median_filter(shear_map_filt,
                                                size=median_filter)
 
-    sin_map = radon(shear_map_filt)
+    sin_map = radon(shear_map_filt, circle=False)
     profile_filt = np.max(sin_map, axis=0)
 
     return profile_filt.tolist()
 
 
-def compute_radon(dicmap, grain_id, regionprop,
-                  threshold_func=filters.threshold_mean,
+def compute_radon(regionprop, threshold_func=filters.threshold_mean,
                   threshold_multiplier=1.6, minimum_threshold=0.013):
-    values = np.asarray(dicmap[grain_id].data.max_shear)
-    threshold_value = max(threshold_multiplier * threshold_func(values),
-                          minimum_threshold)
     grain_map = regionprop.intensity_image
     grain_map[~regionprop.image] = np.nan
+    values = grain_map[np.isfinite(grain_map)]
+    threshold_value = max(threshold_multiplier * threshold_func(values),
+                          minimum_threshold)
     angle_list = sb_angle(grain_map, threshold=threshold_value,
                           median_filter=3)
     return np.asarray(angle_list)

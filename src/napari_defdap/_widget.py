@@ -51,8 +51,11 @@ class GrainPlots(QWidget):
             self.ax1.set_theta_zero_location('S')
         lab = self.grains_layer.selected_label
         k = lab - 1
-        prop = self.props_dict[lab]
-        radon_values = compute_radon(self.dic, k, prop)
+        try:
+            prop = self.props_dict[lab]
+        except KeyError:
+            return
+        radon_values = compute_radon(prop)
         with plt.style.context('dark_background'):
             plot_shear(prop, ax=self.ax0)
             plot_slip_detection_plot(self.dic, k, radon_values, ax=self.ax1)
