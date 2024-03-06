@@ -101,6 +101,8 @@ def read_defdap(path):
     image_data = np.nan_to_num(dicmap.crop(dicmap.data.max_shear))
     grains = dicmap.crop(grains_raw)
     clim = np.quantile(image_data, [0.01, 0.99])
+    if clim[1] == clim[0]:
+        clim[1] += 1
     # optional kwargs for the corresponding viewer.add_* method
     joint_kwargs = {
             'scale': [scale, scale],
