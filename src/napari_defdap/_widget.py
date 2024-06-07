@@ -70,8 +70,7 @@ class GrainPlots(QWidget):
         except KeyError:
             return
         radon_values = compute_radon(prop)
-        dic = self.dic if self.ndim == 2 else self.dic[d]
         with plt.style.context('dark_background'):
             plot_shear(prop, ax=self.ax0)
-            plot_slip_detection_plot(dic, k, radon_values, ax=self.ax1)
+            plot_slip_detection_plot(self.dic[d], k, radon_values, ax=self.ax1)
             self.ax1.figure.canvas.draw_idle()
