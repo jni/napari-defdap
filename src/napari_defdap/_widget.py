@@ -64,7 +64,7 @@ class GrainPlots(QWidget):
             self.ax1.set_theta_zero_location('S')
         lab = self.grains_layer.selected_label
         k = lab - 1
-        d = self.viewer.dims.point[:-2]
+        d = self.viewer.dims.current_step[:-2]
         try:
             prop = self.props_dict[d + (lab,)]
         except KeyError:
