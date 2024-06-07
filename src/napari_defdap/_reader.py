@@ -75,44 +75,31 @@ def read_defdap(path):
     directory = os.path.split(path)[0]
     with open(path, mode='r') as fin:
         data = yaml.safe_load(fin)
-    dic_params = data['dic']
-    ebsd_params = data['ebsd']
-    scale = dic_params['scale']
-    dicmap = hrdic.Map(os.path.join(directory, dic_params['file']))
-    xcrop, ycrop = (crop := dic_params['crop'])['x'], crop['y']
-    dicmap.set_crop(left=xcrop[0], right=xcrop[1],
-                    top=ycrop[0], bottom=ycrop[1])
-    dicmap.set_scale(scale)
 
-    ebsd_fn = os.path.join(directory, ebsd_params['file'])
-    ebsdmap = ebsd.Map(ebsd_fn)
-    ebsdmap.data.generate(
-            'grain_boundaries',
-            misori_tol=ebsd_params.get('misorientation_tolerance', 10)
-            )
-    # ebsdmap.data.grain_boundaries = ebsdmap.find_boundaries(
-    #         misori_tol=ebsd_params.get('misorientation_tolerance', 10)
-    #         )[0]
-    ebsdmap.find_grains(min_grain_size=ebsd_params['min_grain_size'])
-    #ebsdmap.calcGrainMisOri(calcAxis=False)
-    ebsdmap.calc_average_grain_schmid_factors(
-            load_vector=np.array(ebsd_params['load_vector']))
-    dicmap.frame.homog_points = np.array(dic_params['homolog_points'])
-    ebsdmap.frame.homog_points = np.array(ebsd_params['homolog_points'])
-    dicmap.link_ebsd_map(ebsdmap, transform_type=ebsd_params['transform_type'])
-    grains_raw = dicmap.find_grains(
-            algorithm=ebsd_params['find_grains_algorithm']
-            )
-    #dicmap.data.grains = grains_raw
-    image_data = np.nan_to_num(dicmap.crop(dicmap.data.max_shear))
-    grains = dicmap.crop(grains_raw)
+    timepoints = data.get('time', data)
+    n = len(timepoints)
+    dicmaps = {}
+    ebsdmaps = {}
+    grains_list = []
+    image_list = []
+    for i, dat in enumerate(timepoints):
+        dicmap, ebsdmap, _g, _i = read_timepoint(dat, directory)
+        dicmaps[(i,) * (n > 1)] = dicmap
+        ebsdmaps[(i,) * (n > 1)] = ebsdmap
+        grains_list.append(_g)
+        image_list.append(_i)
+    squeeze = 0 if n == 1 else slice(None)
+    grains = np.stack(grains_list)[squeeze]
+    image_data = np.stack(image_list)[squeeze]
+
+    ndim = image_data.ndim
     clim = np.quantile(image_data, [0.01, 0.99])
     if clim[1] == clim[0]:
         clim[1] += 1
     # optional kwargs for the corresponding viewer.add_* method
     joint_kwargs = {
-            'scale': [scale, scale],
-            'metadata': {'dicmap': dicmap, 'ebsdmap': ebsdmap},
+            'scale': (1,) * (ndim - 2) + (dicmap.scale, dicmap.scale),
+            'metadata': {'dicmap': dicmaps, 'ebsdmap': ebsdmaps},
             }
     image_kwargs = {
             **joint_kwargs,
@@ -124,3 +111,37 @@ def read_defdap(path):
 
     return [(image_data, image_kwargs, 'image'),
             (grains, label_kwargs, 'labels')]
+
+
+def read_timepoint(data, directory):
+    dic_params = data['dic']
+    ebsd_params = data['ebsd']
+    scale = dic_params['scale']
+    dicmap = hrdic.Map(os.path.join(directory, dic_params['file']))
+    xcrop, ycrop = (crop := dic_params['crop'])['x'], crop['y']
+    dicmap.set_crop(left=xcrop[0], right=xcrop[1],
+                    top=ycrop[0], bottom=ycrop[1])
+    dicmap.set_scale(scale)
+    ebsd_fn = os.path.join(directory, ebsd_params['file'])
+    ebsdmap = ebsd.Map(ebsd_fn)
+    ebsdmap.data.generate(
+        'grain_boundaries',
+        misori_tol=ebsd_params.get('misorientation_tolerance', 10)
+    )
+    # ebsdmap.data.grain_boundaries = ebsdmap.find_boundaries(
+    #         misori_tol=ebsd_params.get('misorientation_tolerance', 10)
+    #         )[0]
+    ebsdmap.find_grains(min_grain_size=ebsd_params['min_grain_size'])
+    # ebsdmap.calcGrainMisOri(calcAxis=False)
+    ebsdmap.calc_average_grain_schmid_factors(
+        load_vector=np.array(ebsd_params['load_vector']))
+    dicmap.frame.homog_points = np.array(dic_params['homolog_points'])
+    ebsdmap.frame.homog_points = np.array(ebsd_params['homolog_points'])
+    dicmap.link_ebsd_map(ebsdmap, transform_type=ebsd_params['transform_type'])
+    grains_raw = dicmap.find_grains(
+        algorithm=ebsd_params['find_grains_algorithm']
+    )
+    # dicmap.data.grains = grains_raw
+    image_data = np.nan_to_num(dicmap.crop(dicmap.data.max_shear))
+    grains = dicmap.crop(grains_raw)
+    return dicmap, ebsdmap, grains, image_data
