@@ -32,14 +32,27 @@ class GrainPlots(QWidget):
                                  type(layer).__name__ == 'Labels')
         self.intensity_layer = next(layer for layer in napari_viewer.layers
                                     if type(layer).__name__ == 'Image')
-        self.props = measure.regionprops(
-                np.clip(self.grains_layer.data, 0, None),
-                intensity_image=self.intensity_layer.data,
+        grains, shear = np.broadcast_arrays(
+                self.grains_layer.data, self.intensity_layer.data
                 )
-        self.props_dict = {prop.label: prop for prop in self.props}
+        self.grains = grains
+        self.shear = shear
+        self.ndim = grains.ndim
+        self.props = {}
+        self.props_dict = {}
+        for idx in np.ndindex(grains.shape[:-2]):
+            self.props[idx] = measure.regionprops(
+                    np.clip(grains[idx], 0, None), intensity_image=shear[idx]
+                    )
+            self.props_dict.update(
+                    {idx + (prop.label,): prop for prop in self.props[idx]}
+                    )
         self.dic = self.grains_layer.metadata['dicmap']
         self.ebsd = self.grains_layer.metadata['ebsdmap']
-        self.callback = self.grains_layer.events.selected_label.connect(
+        self._sel_callback = self.grains_layer.events.selected_label.connect(
+                self._update_plots
+                )
+        self._dims_callback = self.viewer.dims.events.current_step.connect(
                 self._update_plots
                 )
         self.grains_layer.events.selected_label()
@@ -51,12 +64,14 @@ class GrainPlots(QWidget):
             self.ax1.set_theta_zero_location('S')
         lab = self.grains_layer.selected_label
         k = lab - 1
+        d = self.viewer.dims.point[:-2]
         try:
-            prop = self.props_dict[lab]
+            prop = self.props_dict[d + (lab,)]
         except KeyError:
             return
         radon_values = compute_radon(prop)
+        dic = self.dic if self.ndim == 2 else self.dic[d]
         with plt.style.context('dark_background'):
             plot_shear(prop, ax=self.ax0)
-            plot_slip_detection_plot(self.dic, k, radon_values, ax=self.ax1)
+            plot_slip_detection_plot(dic, k, radon_values, ax=self.ax1)
             self.ax1.figure.canvas.draw_idle()
