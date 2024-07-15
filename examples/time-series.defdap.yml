@@ -1,0 +1,76 @@
+time:
+  - dic:
+      file: IA640C_120h_R3_R40_spacing3_1st_strain.txt
+      scale: 0.01953125  # 40/2048 µm/px
+      crop:
+        x: [20, 20]
+        y: [25, 20]
+      homolog_points:
+        - [59, 44]
+        - [287, 37]
+        - [309, 296]
+        - [185, 200]
+        - [69, 186]
+    ebsd:
+      file: Cleaned_IA640_120h_CR R3_1st_EBSD Map
+      min_grain_size: 10
+      load_vector: [1, 0, 0]
+      misorientation_tolerance: 10
+      homolog_points:
+        - [117, 85]
+        - [388, 29]
+        - [409, 325]
+        - [266, 239]
+        - [130, 242]
+      transform_type: affine
+      find_grains_algorithm: warp
+  - dic:
+      file: IA640C_120h_R3_R40_spacing3_3rd_strain.txt
+      scale: 0.01953125  # 40/2048 µm/px
+      crop:
+        x: [20, 20]
+        y: [25, 20]
+      homolog_points:
+        - [59, 44]
+        - [287, 37]
+        - [309, 296]
+        - [185, 200]
+        - [69, 186]
+    ebsd:
+      file: Cleaned_IA640_120h_CR R3_3rd_EBSD Map
+      min_grain_size: 10
+      load_vector: [1, 0, 0]
+      misorientation_tolerance: 10
+      homolog_points:
+        - [133, 120]
+        - [408, 67]
+        - [427, 365]
+        - [282, 280]
+        - [145, 279]
+      transform_type: affine
+      find_grains_algorithm: warp
+  - dic:
+      file: IA640C_120h_R3_R40_spacing3_5th_strain.txt
+      scale: 0.01953125  # 40/2048 µm/px
+      crop:
+        x: [20, 20]
+        y: [25, 20]
+      homolog_points:
+        - [59, 44]
+        - [287, 37]
+        - [309, 296]
+        - [185, 200]
+        - [69, 186]
+    ebsd:
+      file: Cleaned_IA640_120h_CR R3_5th_EBSD Map
+      min_grain_size: 10
+      load_vector: [1, 0, 0]
+      misorientation_tolerance: 10
+      homolog_points:
+        - [117, 118]
+        - [401, 71]
+        - [425, 371]
+        - [275, 281]
+        - [134, 279]
+      transform_type: affine
+      find_grains_algorithm: warp
