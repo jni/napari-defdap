@@ -105,15 +105,41 @@ def read_defdap(path):
             **joint_kwargs,
             'contrast_limits': clim,
             'colormap': 'viridis',
-            'name': 'max_shear'
+            'name': 'max_shear',
             }
-    label_kwargs = {**joint_kwargs, 'name': 'grains'}
+    label_kwargs = {
+            **joint_kwargs,
+            'name': 'grains',
+            'blending': 'translucent_no_depth',
+            }
 
     return [(image_data, image_kwargs, 'image'),
             (grains, label_kwargs, 'labels')]
 
 
 def read_timepoint(data, directory):
+    """Read a single timepoint containing both DIC and EBSD data.
+
+    Parameters
+    ----------
+    data : dict
+        A dictionary containing loading parameters for DIC and EBSD maps,
+        including their homolog points for affine warping the EBSD to the
+        DIC frame.
+    directory : pathlib.Path | str
+        Where to look for the image data files.
+
+    Returns
+    -------
+    dicmap : defdap.hrdic.Map
+        The DIC map.
+    ebsdmap : defdap.ebsd.Map
+        The EBSD map.
+    grains : np.ndarray
+        The grains array (containing grainid - 1 at each pixel).
+    image_data : np.ndarray
+        The max shear array.
+    """
     dic_params = data['dic']
     ebsd_params = data['ebsd']
     scale = dic_params['scale']
