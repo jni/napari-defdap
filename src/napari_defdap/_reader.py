@@ -7,6 +7,7 @@ https://napari.org/stable/plugins/guides.html?#readers
 """
 import os
 import numpy as np
+from scipy import ndimage as ndi
 import yaml
 from defdap import hrdic, ebsd
 
@@ -81,19 +82,22 @@ def read_defdap(path):
     dicmaps = {}
     ebsdmaps = {}
     grains_list = []
-    image_list = []
+    max_shear_list = []
+    phase_list = []
     for i, dat in enumerate(timepoints):
-        dicmap, ebsdmap, _g, _i = read_timepoint(dat, directory)
+        dicmap, ebsdmap, _g, _m, _p = read_timepoint(dat, directory)
         dicmaps[(i,) * (n > 1)] = dicmap
         ebsdmaps[(i,) * (n > 1)] = ebsdmap
         grains_list.append(_g)
-        image_list.append(_i)
+        max_shear_list.append(_m)
+        phase_list.append(_p)
     squeeze = 0 if n == 1 else slice(None)
     grains = np.stack(grains_list)[squeeze]
-    image_data = np.stack(image_list)[squeeze]
+    max_shear = np.stack(max_shear_list)[squeeze]
+    phase = np.stack(phase_list)[squeeze]
 
-    ndim = image_data.ndim
-    clim = np.quantile(image_data, [0.01, 0.99])
+    ndim = max_shear.ndim
+    clim = np.quantile(max_shear, [0.01, 0.99])
     if clim[1] == clim[0]:
         clim[1] += 1
     # optional kwargs for the corresponding viewer.add_* method
@@ -101,7 +105,7 @@ def read_defdap(path):
             'scale': (1,) * (ndim - 2) + (dicmap.scale, dicmap.scale),
             'metadata': {'dicmap': dicmaps, 'ebsdmap': ebsdmaps},
             }
-    image_kwargs = {
+    max_shear_kwargs = {
             **joint_kwargs,
             'contrast_limits': clim,
             'colormap': 'viridis',
@@ -112,9 +116,19 @@ def read_defdap(path):
             'name': 'grains',
             'blending': 'translucent_no_depth',
             }
+    phase_kwargs = {
+            **joint_kwargs,
+            'name': 'phase',
+            'blending': 'translucent_no_depth',
+            'features': {
+                    'index': np.arange(len(ebsdmap.phases) + 1),
+                    'names': ['not indexed'] + [p.name for p in ebsdmap.phases],
+                    },
+            }
 
-    return [(image_data, image_kwargs, 'image'),
-            (grains, label_kwargs, 'labels')]
+    return [(max_shear, max_shear_kwargs, 'image'),
+            (grains, label_kwargs, 'labels'),
+            (phase, phase_kwargs, 'labels'),]
 
 
 def read_timepoint(data, directory):
@@ -137,8 +151,10 @@ def read_timepoint(data, directory):
         The EBSD map.
     grains : np.ndarray
         The grains array (containing grainid - 1 at each pixel).
-    image_data : np.ndarray
+    max_shear : np.ndarray
         The max shear array.
+    phase : np.ndarray
+        The phase array
     """
     dic_params = data['dic']
     ebsd_params = data['ebsd']
@@ -168,6 +184,9 @@ def read_timepoint(data, directory):
         algorithm=ebsd_params['find_grains_algorithm']
     )
     # dicmap.data.grains = grains_raw
-    image_data = np.nan_to_num(dicmap.crop(dicmap.data.max_shear))
+    max_shear = np.nan_to_num(dicmap.crop(dicmap.data.max_shear))
     grains = dicmap.crop(grains_raw)
-    return dicmap, ebsdmap, grains, image_data
+    phase = dicmap.crop(dicmap.warp_to_dic_frame(
+            ebsdmap.data.phase, order=0, preserve_range=True
+            ))
+    return dicmap, ebsdmap, grains, max_shear, phase

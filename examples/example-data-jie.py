@@ -2,7 +2,7 @@ import napari
 from napari_defdap._tracks import tracks_from_seg
 
 viewer = napari.Viewer()
-shear_layer, grains_layer = viewer.open(
+shear_layer, grains_layer, phase_layer = viewer.open(
         '/Users/jni/data/jie-tracking-grains/data/time-series.defdap.yml',
         plugin='napari-defdap'
         )
