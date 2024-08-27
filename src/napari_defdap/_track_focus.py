@@ -12,8 +12,8 @@ def set_track_focus(
     track_locations = df.loc[df['track_id'] == track_id, ['t', 'y', 'x']]
     if track_locations.shape[0] == 0:
         return
-    current_timepoint = viewer.dims.point[0]
-    if current_timepoint not in track_locations.t:
+    current_timepoint = float(viewer.dims.point[0])
+    if current_timepoint not in list(track_locations.t):
         current_timepoint = track_locations.t.iloc[-1]
     new_point = track_locations[
             track_locations.t == current_timepoint
