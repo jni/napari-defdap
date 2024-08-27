@@ -17,8 +17,8 @@ def set_track_focus(
         current_timepoint = track_locations.t.iloc[-1]
     new_point = track_locations[
             track_locations.t == current_timepoint
-            ].to_numpy()
-    viewer.dims.point = new_point
+            ].to_numpy()[0] * layer.scale
+    viewer.dims.point = tuple(new_point)
     if viewer.dims.ndisplay == 2:
         viewer.camera.center = new_point[1:]
     else:
