@@ -9,7 +9,7 @@ def set_track_focus(
         ):
     """Given a tracks layer and a track id, set camera focus on that track."""
     df = layer.features  # make sure to add the dataframe to the tracks layer
-    track_locations = df[df['track_id' == track_id], ['t', 'y', 'x']]
+    track_locations = df.loc[df['track_id'] == track_id, ['t', 'y', 'x']]
     if track_locations.shape[0] == 0:
         return
     current_timepoint = viewer.dims.point[0]
