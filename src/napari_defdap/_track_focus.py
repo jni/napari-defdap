@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from magicgui import magic_factory
 
 
@@ -5,7 +7,7 @@ from magicgui import magic_factory
 def set_track_focus(
         viewer: 'napari.viewer.Viewer',
         layer: 'napari.layers.Tracks',
-        track_id: int,
+        track_id: Annotated[int, {'max': 1_000_000, 'step': 1}],
         ):
     """Given a tracks layer and a track id, set camera focus on that track."""
     df = layer.features  # make sure to add the dataframe to the tracks layer
