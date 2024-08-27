@@ -12,7 +12,7 @@ contributions:
       python_name: napari_defdap._widget:GrainPlots
       title: Make example QWidget
     - id: napari-defdap.track_focus
-      python_name: napari_defdap._track_focus.set_track_focus
+      python_name: napari_defdap._track_focus:set_track_focus
       title: Set Track Focus
   readers:
     - command: napari-defdap.get_reader
