@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from napari_defdap._track_focus import set_track_focus
 
@@ -14,7 +15,10 @@ def test_track_focus(make_napari_viewer):
         [1, 3, 30, 40],
         [1, 4, 50, 50],
     ])
-    tracks_layer = viewer.add_tracks(tracks)
+    tracks_layer = viewer.add_tracks(
+            tracks,
+            features=pd.DataFrame(tracks, columns=['track_id', 't', 'y', 'x']),
+            )
     widget = set_track_focus()
     widget(viewer, tracks_layer, 1)
     assert viewer.camera.center == (25, 25)
