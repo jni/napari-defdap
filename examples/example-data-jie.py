@@ -1,4 +1,5 @@
 import napari
+import pandas as pd
 from napari_defdap._tracks import tracks_from_seg
 
 viewer = napari.Viewer()
@@ -23,9 +24,15 @@ eg = g.ebsd_grain
 seg = grains_layer.data
 
 tracks = tracks_from_seg(seg, time_axis=0)
+tracks_data = pd.DataFrame(
+    tracks,
+    columns=['track_id', 't', 'y', 'x'],
+)
 
 pts_layer = viewer.add_points(tracks[:, 1:], size=3, scale=grains_layer.scale)
-trk_layer = viewer.add_tracks(tracks, scale=grains_layer.scale)
+trk_layer = viewer.add_tracks(
+        tracks, scale=grains_layer.scale, features=tracks_data
+        )
 
 if __name__ == '__main__':
     napari.run()

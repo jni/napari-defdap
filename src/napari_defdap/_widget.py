@@ -6,7 +6,11 @@ from typing import TYPE_CHECKING
 import numpy as np
 import matplotlib.pyplot as plt
 from skimage import measure
-from napari_matplotlib.base import NapariMPLWidget
+try:
+    from napari_matplotlib.base import NapariMPLWidget
+    napari_mpl_available = True
+except ImportError:
+    napari_mpl_available = False
 from qtpy.QtWidgets import QHBoxLayout, QWidget
 
 from ._plot_functions import plot_slip_detection_plot, plot_shear
@@ -20,6 +24,8 @@ class GrainPlots(QWidget):
     def __init__(self, napari_viewer: 'napari.viewer.Viewer', parent=None):
         super().__init__(parent=parent)
         self.viewer = napari_viewer
+        if not napari_mpl_available:
+            raise RuntimeError('napari-matplotlib is not installed.')
         with plt.style.context('dark_background'):
             self.mpl = NapariMPLWidget(napari_viewer, parent=self)
         self.setLayout(QHBoxLayout())
