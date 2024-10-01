@@ -21,4 +21,4 @@ def test_track_focus(make_napari_viewer):
             )
     widget = set_track_focus()
     widget(viewer, tracks_layer, 1)
-    assert viewer.camera.center == (25, 25)
+    assert viewer.camera.center[-2:] == (25, 25)
