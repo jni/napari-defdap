@@ -20,6 +20,6 @@ def test_track_focus(make_napari_viewer, qtbot):
             features=pd.DataFrame(tracks, columns=['track_id', 't', 'y', 'x']),
             )
     widget = set_track_focus()
-    qtbot.addWidget(widget)
+    qtbot.addWidget(widget.native)
     widget(viewer, tracks_layer, 1)
     assert viewer.camera.center[-2:] == (25, 25)
