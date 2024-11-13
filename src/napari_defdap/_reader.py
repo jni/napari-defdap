@@ -77,7 +77,7 @@ def read_defdap(path):
     with open(path, mode='r') as fin:
         data = yaml.safe_load(fin)
 
-    timepoints = data.get('time', data)
+    timepoints = data.get('time', [data])
     n = len(timepoints)
     dicmaps = {}
     ebsdmaps = {}
