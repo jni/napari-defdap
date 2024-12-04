@@ -4,7 +4,7 @@ import trackpy as tpy
 from skimage import measure
 
 
-def _add_non_indexed(seg, time_axis=0):
+def add_non_indexed(seg, time_axis=0):
     ndim = seg.ndim
     non_indexed = seg <= 0
     axes = tuple(i for i in range(ndim) if i != time_axis)
@@ -27,9 +27,8 @@ def _slice(ndim, ax, i):
 
 def points_from_seg(seg, time_axis=0, include_non_indexed=True):
     coords_iter = []
-    full_seg = _add_non_indexed(seg) if include_non_indexed else seg
-    for i in range(full_seg.shape[time_axis]):
-        seg_t = full_seg[_slice(full_seg.ndim, time_axis, i)]
+    for i in range(seg.shape[time_axis]):
+        seg_t = seg[_slice(seg.ndim, time_axis, i)]
         seg_clipped = np.clip(seg_t, 0, None)
         props = measure.regionprops_table(
                 seg_clipped, properties=('centroid',)
