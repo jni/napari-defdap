@@ -12,7 +12,7 @@ import yaml
 from defdap import hrdic, ebsd
 
 
-def add_non_indexed(seg, time_axis=0):
+def _add_non_indexed(seg, time_axis=0):
     ndim = seg.ndim
     non_indexed = seg <= 0
     axes = tuple(i for i in range(ndim) if i != time_axis)
