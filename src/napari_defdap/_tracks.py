@@ -1,22 +1,6 @@
 import numpy as np
-from scipy import ndimage as ndi
 import trackpy as tpy
 from skimage import measure
-
-
-def add_non_indexed(seg, time_axis=0):
-    ndim = seg.ndim
-    non_indexed = seg <= 0
-    axes = tuple(i for i in range(ndim) if i != time_axis)
-    max_label = np.max(seg, axis=axes)
-    labeled = np.zeros_like(seg)
-    for i in range(seg.shape[time_axis]):
-        idx_ = [slice(None),] * ndim
-        idx_[time_axis] = i
-        idx = tuple(idx_)
-        labeled[idx] = ndi.label(non_indexed[idx])[0] + max_label[i]
-    output = np.where(non_indexed, labeled, seg)
-    return output
 
 
 def _slice(ndim, ax, i):
