@@ -107,7 +107,7 @@ def read_defdap(path):
         max_shear_list.append(_m)
         phase_list.append(_p)
     squeeze = 0 if n == 1 else slice(None)
-    grains = np.stack(grains_list)[squeeze]
+    grains = _add_non_indexed(np.stack(grains_list))[squeeze]
     max_shear = np.stack(max_shear_list)[squeeze]
     phase = np.stack(phase_list)[squeeze]
 
