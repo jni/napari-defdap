@@ -1,6 +1,20 @@
 import numpy as np
+from scipy import ndimage as ndi
 import trackpy as tpy
 from skimage import measure
+
+
+def _add_non_indexed(seg, time_axis=0):
+    non_indexed = seg <= 0
+    struct_slice = [slice(None),] * seg.ndim
+    struct_slice[time_axis] = slice(1, 2)
+    structure = ndi.generate_binary_structure(seg.ndim, 1)[tuple(struct_slice)]
+    axes = tuple(i for i in range(seg.ndim) if i != time_axis)
+    max_label = np.max(seg, axis=axes, keepdims=True)
+    labeled = ndi.label(non_indexed, structure) + max_label
+    output = np.where(non_indexed, labeled, seg)
+    return output
+
 
 def _slice(ndim, ax, i):
     output = [slice(None),] * ndim
@@ -8,10 +22,11 @@ def _slice(ndim, ax, i):
     return tuple(output)
 
 
-def points_from_seg(seg, time_axis=0):
+def points_from_seg(seg, time_axis=0, include_non_indexed=True):
     coords_iter = []
-    for i in range(seg.shape[time_axis]):
-        seg_t = seg[_slice(seg.ndim, time_axis, i)]
+    full_seg = _add_non_indexed(seg) if include_non_indexed else seg
+    for i in range(full_seg.shape[time_axis]):
+        seg_t = full_seg[_slice(full_seg.ndim, time_axis, i)]
         seg_clipped = np.clip(seg_t, 0, None)
         props = measure.regionprops_table(
                 seg_clipped, properties=('centroid',)
