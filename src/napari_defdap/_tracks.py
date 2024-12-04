@@ -5,13 +5,16 @@ from skimage import measure
 
 
 def _add_non_indexed(seg, time_axis=0):
+    ndim = seg.ndim
     non_indexed = seg <= 0
-    struct_slice = [slice(None),] * seg.ndim
-    struct_slice[time_axis] = slice(1, 2)
-    structure = ndi.generate_binary_structure(seg.ndim, 1)[tuple(struct_slice)]
-    axes = tuple(i for i in range(seg.ndim) if i != time_axis)
-    max_label = np.max(seg, axis=axes, keepdims=True)
-    labeled = ndi.label(non_indexed, structure) + max_label
+    axes = tuple(i for i in range(ndim) if i != time_axis)
+    max_label = np.max(seg, axis=axes)
+    labeled = np.zeros_like(seg)
+    for i in range(seg.shape[time_axis]):
+        idx_ = [slice(None),] * ndim
+        idx_[time_axis] = i
+        idx = tuple(idx_)
+        labeled[idx] = ndi.label(non_indexed[idx])[0] + max_label[i]
     output = np.where(non_indexed, labeled, seg)
     return output
 
