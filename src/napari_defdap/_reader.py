@@ -8,11 +8,12 @@ https://napari.org/stable/plugins/guides.html?#readers
 import os
 import numpy as np
 from scipy import ndimage as ndi
+from skimage.morphology import remove_small_objects
 import yaml
 from defdap import hrdic, ebsd
 
 
-def _add_non_indexed(seg, time_axis=0):
+def _add_non_indexed(seg, time_axis=0, min_size=0):
     ndim = seg.ndim
     non_indexed = seg <= 0
     axes = tuple(i for i in range(ndim) if i != time_axis)
@@ -22,7 +23,13 @@ def _add_non_indexed(seg, time_axis=0):
         idx_ = [slice(None),] * ndim
         idx_[time_axis] = i
         idx = tuple(idx_)
-        labeled[idx] = ndi.label(non_indexed[idx])[0] + max_label[i]
+        labeled_i = ndi.label(non_indexed[idx])[0] + max_label[i]
+        if min_size > 0:
+            remove_small_objects(
+                    labeled_i, min_size=min_size, out=labeled[idx]
+                    )
+        else:
+            labeled[idx] = labeled_i
     output = np.where(non_indexed, labeled, seg)
     return output
 
