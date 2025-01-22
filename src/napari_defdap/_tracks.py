@@ -2,13 +2,14 @@ import numpy as np
 import trackpy as tpy
 from skimage import measure
 
+
 def _slice(ndim, ax, i):
     output = [slice(None),] * ndim
     output[ax] = i
     return tuple(output)
 
 
-def points_from_seg(seg, time_axis=0):
+def points_from_seg(seg, time_axis=0, include_non_indexed=True):
     coords_iter = []
     for i in range(seg.shape[time_axis]):
         seg_t = seg[_slice(seg.ndim, time_axis, i)]

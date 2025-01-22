@@ -8,8 +8,30 @@ https://napari.org/stable/plugins/guides.html?#readers
 import os
 import numpy as np
 from scipy import ndimage as ndi
+from skimage.morphology import remove_small_objects
 import yaml
 from defdap import hrdic, ebsd
+
+
+def _add_non_indexed(seg, time_axis=0, min_size=0):
+    ndim = seg.ndim
+    non_indexed = seg <= 0
+    axes = tuple(i for i in range(ndim) if i != time_axis)
+    max_label = np.max(seg, axis=axes)
+    labeled = np.zeros_like(seg)
+    for i in range(seg.shape[time_axis]):
+        idx_ = [slice(None),] * ndim
+        idx_[time_axis] = i
+        idx = tuple(idx_)
+        labeled_i = ndi.label(non_indexed[idx])[0] + max_label[i]
+        if min_size > 0:
+            remove_small_objects(
+                    labeled_i, min_size=min_size, out=labeled[idx]
+                    )
+        else:
+            labeled[idx] = labeled_i
+    output = np.where(non_indexed, labeled, seg)
+    return output
 
 
 def _look_for_ebsd(path):
@@ -91,8 +113,11 @@ def read_defdap(path):
         grains_list.append(_g)
         max_shear_list.append(_m)
         phase_list.append(_p)
+    min_grain_size = timepoints[0]['ebsd']['min_grain_size']
     squeeze = 0 if n == 1 else slice(None)
-    grains = np.stack(grains_list)[squeeze]
+    grains = _add_non_indexed(
+            np.stack(grains_list), min_size=min_grain_size
+            )[squeeze]
     max_shear = np.stack(max_shear_list)[squeeze]
     phase = np.stack(phase_list)[squeeze]
 
