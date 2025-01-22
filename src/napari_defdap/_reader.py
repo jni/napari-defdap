@@ -113,8 +113,11 @@ def read_defdap(path):
         grains_list.append(_g)
         max_shear_list.append(_m)
         phase_list.append(_p)
+    min_grain_size = timepoints[0]['ebsd']['min_grain_size']
     squeeze = 0 if n == 1 else slice(None)
-    grains = _add_non_indexed(np.stack(grains_list))[squeeze]
+    grains = _add_non_indexed(
+            np.stack(grains_list), min_size=min_grain_size
+            )[squeeze]
     max_shear = np.stack(max_shear_list)[squeeze]
     phase = np.stack(phase_list)[squeeze]
 
